@@ -7,6 +7,7 @@ import com.modallk.order_service.entity.Cart;
 import com.modallk.order_service.entity.Order;
 import com.modallk.order_service.entity.OrderItem;
 import com.modallk.order_service.entity.OrderStatus;
+import com.modallk.order_service.exception.ResourceNotFoundException;
 import com.modallk.order_service.repository.CartRepository;
 import com.modallk.order_service.repository.OrderItemRepository;
 import com.modallk.order_service.repository.OrderRepository;
@@ -34,13 +35,12 @@ public class OrderService {
                 .getName();
 
         Cart cart = cartRepository.findByUserEmail(email)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user: " + email));
 
         if (cart.getCartItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new IllegalArgumentException("Cart is empty. Please add items before placing an order.");
         }
 
-        // Build order items from cart items
         List<OrderItem> orderItems = cart.getCartItems().stream()
                 .map(cartItem -> OrderItem.builder()
                         .productId(cartItem.getProductId())
@@ -52,12 +52,10 @@ public class OrderService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Calculate total
         Double totalAmount = orderItems.stream()
                 .mapToDouble(OrderItem::getSubtotal)
                 .sum();
 
-        // Create and save order
         Order order = Order.builder()
                 .userEmail(email)
                 .orderItems(orderItems)
@@ -66,12 +64,10 @@ public class OrderService {
                 .totalAmount(totalAmount)
                 .build();
 
-        // Link each order item to the order
         orderItems.forEach(item -> item.setOrder(order));
 
         Order savedOrder = orderRepository.save(order);
 
-        // Clear the cart after placing order
         cart.getCartItems().clear();
         cartRepository.save(cart);
 
@@ -97,10 +93,10 @@ public class OrderService {
                 .getName();
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
         if (!order.getUserEmail().equals(email)) {
-            throw new RuntimeException("Unauthorized access to this order");
+            throw new IllegalArgumentException("You are not authorized to view this order.");
         }
 
         return mapToOrderResponse(order);
@@ -113,17 +109,42 @@ public class OrderService {
                 .getName();
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
         if (!order.getUserEmail().equals(email)) {
-            throw new RuntimeException("Unauthorized access to this order");
+            throw new IllegalArgumentException("You are not authorized to cancel this order.");
         }
 
         if (order.getStatus() != OrderStatus.PENDING) {
-            throw new RuntimeException("Only PENDING orders can be cancelled");
+            throw new IllegalArgumentException("Only PENDING orders can be cancelled.");
         }
 
         order.setStatus(OrderStatus.CANCELLED);
+        Order savedOrder = orderRepository.save(order);
+        return mapToOrderResponse(savedOrder);
+    }
+
+    // Admin: Get all orders
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll()
+                .stream()
+                .map(this::mapToOrderResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Admin: Get order by ID (no ownership check)
+    public OrderResponse getAdminOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        return mapToOrderResponse(order);
+    }
+
+    // Admin: Update order status
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        order.setStatus(status);
         Order savedOrder = orderRepository.save(order);
         return mapToOrderResponse(savedOrder);
     }
@@ -154,31 +175,4 @@ public class OrderService {
                 .updatedAt(order.getUpdatedAt())
                 .build();
     }
-
-    // Admin: Get all orders
-    public List<OrderResponse> getAllOrders() {
-        return orderRepository.findAll()
-                .stream()
-                .map(this::mapToOrderResponse)
-                .collect(Collectors.toList());
-    }
-
-    // Admin: Get order by ID (no ownership check)
-    public OrderResponse getAdminOrderById(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        return mapToOrderResponse(order);
-    }
-
-    // Admin: Update order status
-    public OrderResponse updateOrderStatus(Long orderId, OrderStatus status) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-
-        order.setStatus(status);
-        Order savedOrder = orderRepository.save(order);
-        return mapToOrderResponse(savedOrder);
-    }
-
 }
-
