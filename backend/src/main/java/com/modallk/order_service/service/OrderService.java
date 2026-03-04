@@ -10,6 +10,7 @@ import com.modallk.order_service.entity.OrderStatus;
 import com.modallk.order_service.repository.CartRepository;
 import com.modallk.order_service.repository.OrderItemRepository;
 import com.modallk.order_service.repository.OrderRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OrderService {
 
     private final OrderRepository orderRepository;
