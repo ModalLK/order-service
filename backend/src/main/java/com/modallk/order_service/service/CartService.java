@@ -114,5 +114,38 @@ public class CartService {
         return mapToCartResponse(cart);
     }
 
+    public CartResponse removeCartItem(Long itemId) {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        Cart cart = cartRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        CartItem item = cart.getCartItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Cart item not found with id: " + itemId));
+
+        cart.getCartItems().remove(item);
+        cartRepository.save(cart);
+
+        return mapToCartResponse(cart);
+    }
+
+    public void clearCart() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        Cart cart = cartRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        cart.getCartItems().clear();
+        cartRepository.save(cart);
+    }
+
+
+
 
 }
