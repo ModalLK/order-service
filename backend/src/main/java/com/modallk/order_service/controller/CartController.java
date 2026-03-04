@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.modallk.order_service.dto.UpdateCartItemRequest;
+
 
 @RestController
 @RequestMapping("/api/cart")
@@ -24,4 +26,20 @@ public class CartController {
     public ResponseEntity<CartResponse> addToCart(@Valid @RequestBody CartItemRequest request) {
         return ResponseEntity.ok(cartService.addToCart(request));
     }
+
+    @GetMapping
+    @Operation(summary = "Get my cart", description = "Returns the logged-in user's cart.")
+    public ResponseEntity<CartResponse> getMyCart() {
+        return ResponseEntity.ok(cartService.getMyCart());
+    }
+
+    @PutMapping("/items/{itemId}")
+    @Operation(summary = "Update cart item", description = "Update the quantity of a cart item.")
+    public ResponseEntity<CartResponse> updateCartItem(
+            @PathVariable Long itemId,
+            @Valid @RequestBody UpdateCartItemRequest request) {
+        return ResponseEntity.ok(cartService.updateCartItem(itemId, request));
+    }
+
+
 }

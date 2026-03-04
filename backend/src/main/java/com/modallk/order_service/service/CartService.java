@@ -6,12 +6,15 @@ import com.modallk.order_service.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CartService {
 
     private final CartRepository cartRepository;
@@ -80,4 +83,36 @@ public class CartService {
                 .totalAmount(total)
                 .build();
     }
+
+    public CartResponse getMyCart() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        Cart cart = cartRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cart is empty"));
+
+        return mapToCartResponse(cart);
+    }
+
+    public CartResponse updateCartItem(Long itemId, UpdateCartItemRequest request) {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        Cart cart = cartRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        CartItem item = cart.getCartItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Cart item not found with id: " + itemId));
+
+        item.setQuantity(request.getQuantity());
+        cartRepository.save(cart);
+
+        return mapToCartResponse(cart);
+    }
+
+
 }
