@@ -54,7 +54,10 @@ public class CartController {
         return ResponseEntity.ok("Cart cleared successfully");
     }
 
-
-
+    @GetMapping("/items/{itemId}")
+    @Operation(summary = "Get cart item by ID", description = "Returns a single cart item by its ID.")
+    public ResponseEntity<CartItemResponse> getCartItemById(@PathVariable Long itemId) {
+        return ResponseEntity.ok(cartService.getCartItemById(itemId));
+    }
 
 }

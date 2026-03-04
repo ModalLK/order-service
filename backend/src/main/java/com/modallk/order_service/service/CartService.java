@@ -145,7 +145,28 @@ public class CartService {
         cartRepository.save(cart);
     }
 
+    public CartItemResponse getCartItemById(Long itemId) {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
+        Cart cart = cartRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
 
+        CartItem item = cart.getCartItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Cart item not found with id: " + itemId));
+
+        return CartItemResponse.builder()
+                .id(item.getId())
+                .productId(item.getProductId())
+                .productName(item.getProductName())
+                .price(item.getPrice())
+                .quantity(item.getQuantity())
+                .size(item.getSize())
+                .subtotal(item.getPrice() * item.getQuantity())
+                .build();
+    }
 
 }
