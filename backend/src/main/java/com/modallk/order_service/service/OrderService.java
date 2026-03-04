@@ -1,6 +1,21 @@
 package com.modallk.order_service.service;
 
+import com.modallk.order_service.dto.OrderItemResponse;
 import com.modallk.order_service.dto.OrderResponse;
+import com.modallk.order_service.dto.PlaceOrderRequest;
+import com.modallk.order_service.entity.Cart;
+import com.modallk.order_service.entity.Order;
+import com.modallk.order_service.entity.OrderItem;
+import com.modallk.order_service.entity.OrderStatus;
+import com.modallk.order_service.repository.CartRepository;
+import com.modallk.order_service.repository.OrderItemRepository;
+import com.modallk.order_service.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
