@@ -1,5 +1,7 @@
 package com.modallk.order_service.service;
 
+import com.modallk.order_service.dto.OrderResponse;
+
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -135,5 +137,31 @@ public class OrderService {
                 .updatedAt(order.getUpdatedAt())
                 .build();
     }
+
+    // Admin: Get all orders
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll()
+                .stream()
+                .map(this::mapToOrderResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Admin: Get order by ID (no ownership check)
+    public OrderResponse getAdminOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        return mapToOrderResponse(order);
+    }
+
+    // Admin: Update order status
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        order.setStatus(status);
+        Order savedOrder = orderRepository.save(order);
+        return mapToOrderResponse(savedOrder);
+    }
+
 }
 
