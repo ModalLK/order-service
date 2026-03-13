@@ -11,16 +11,10 @@ public class CartItemRequest {
     @NotNull
     private Long productId;
 
-    @NotBlank
-    private String productName;
-
-    @NotNull
-    private Double price;
-
     @Min(1)
     @NotNull
     private Integer quantity;
 
     @NotBlank
-    private String size; // S, M, L, XL
+    private String size;
 }
