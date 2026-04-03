@@ -25,7 +25,7 @@ public class PaymentClientService {
         HttpEntity<PaymentCheckoutRequestDto> entity = new HttpEntity<>(request, headers);
 
         ResponseEntity<PaymentResponseDto> response = restTemplate.exchange(
-                paymentServiceUrl + "/payments/checkout",
+                paymentServiceUrl + "/api/payments/checkout",
                 HttpMethod.POST,
                 entity,
                 PaymentResponseDto.class
